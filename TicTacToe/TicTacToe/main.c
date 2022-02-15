@@ -26,14 +26,14 @@ int init_network(int *sockfd){
     
     if(host == 0)
     {
-        printf("Initilizing Network with client configuration");
+        printf("Initializing Network with client configuration\n");
         
         //Socket creation
-        printf("Trying to create Socket ..\n");
+        printf("Trying to create Socket .. \n");
         struct sockaddr_in servaddr, cli;
         *sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (*sockfd == -1) {
-            printf("Socket creation failed...\n");
+            printf("Socket creation failed.. \n");
             exit(0);
         }
         else
@@ -42,12 +42,12 @@ int init_network(int *sockfd){
         
         
         //Assign IP and Port to STRUCT
-        printf("Trying to assign IP address and port..\n");
+        printf("Trying to assign IP address and port.. \n");
 #ifdef LOCALHOST
         servaddr.sin_family = AF_INET;
         servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
         servaddr.sin_port = htons(PORT);
-        printf("LOCALHOST and port successfully created..\n");
+        printf("LOCALHOST and port successfully created.. \n");
 #endif
 #ifndef LOCALHOST
         
@@ -109,15 +109,11 @@ int main(int argc, const char * argv[]) {
             }
         else
         {
-            printf("You're joining a game.");
+            printf("You're joining a game.\n");
         }
     
     int socket;
     init_network(&socket);
-    
-    
-    
-    
     system("clear");
     
     
