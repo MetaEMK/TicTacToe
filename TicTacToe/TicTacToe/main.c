@@ -22,6 +22,107 @@
 
 int host = 0;
 
+char playground[3][3];
+char inp_coor[3];
+char didSomeoneWin = 0;
+
+void preConfig(){
+    for (int spalte = 0; spalte < 3; spalte++) {
+        for (int zeile = 0; zeile < 3; zeile++) {
+            playground[spalte][zeile] = '-';
+        }
+    }
+}
+
+void Output(){
+    for (int zeile = 0; zeile < 3; zeile++) {
+        for (int spalte = 0; spalte < 3; spalte++) {
+            printf("%c  ", playground[spalte][zeile]);
+        }
+        printf("\n");
+        
+    }
+}
+int CheckWin(char a){
+    if (playground[0][0] == a && playground[1][1] == a && playground[2][2] == a) { didSomeoneWin = a; }
+    if (playground[2][0] == a && playground[1][1] == a && playground[0][2] == a) { didSomeoneWin = 1; }
+    //Rest Prüfen
+    for (int i = 0; i < 3; i++) {
+        //Spalte
+        if (playground[i][0] == a && playground[i][1] == a && playground[i][2] == a) { didSomeoneWin = a; }
+        //Zeile
+        if (playground[0][i] == a && playground[1][i] == a && playground[2][i] == a) { didSomeoneWin = a; }
+    }
+    if (a != 0) return 1;
+    else return 0;
+}
+void Input(int *coord){
+        int br1=1;
+        int br2=1;
+        while(br1 == 1 && br2 == 1){
+            br1=1;
+            br2=1;
+            char z = '0';
+            char s = '0';
+            fflush(stdin);
+            printf("Please enter coordinates row: 0/1/2\n");
+            scanf("%c", &z);
+            if(z == '0' || z == '1' || z == '2') {
+                br1 = 0;
+                printf("Wrong input, please try again!");
+            }
+            fflush(stdin);
+            printf("Please enter coordinates column: 0/1/2 and column 0/1/2\n");
+            scanf("%c", &s);
+            if(s == '0' || s == '1' || s == '2') {
+                br2 = 0;
+                printf("Wrong input, please try again!");
+            }
+            fflush(stdin);
+            coord[0] =z;
+            coord[1] =s;
+            if (playground[s][z] != '-')
+            {
+                printf("Wrong input, please try again!");
+                br1=0;
+        }
+    }
+}
+
+int client_game(int *connfd){
+    char txt[80];
+    read(*connfd,&txt,sizeof(txt));
+    if (strcmp(txt, "Game start")!= 1) {
+        printf("Game could not start!");
+        return EXIT_FAILURE;
+    }
+    write(*connfd, "ACK", sizeof("ACK"));
+    
+    
+}
+int host_game(int *connfd){
+    char txt[80];
+    
+    write(*connfd, "Game start", sizeof("Game start"));
+    read(*connfd,&txt,sizeof("ACK"));
+    if (strcmp(txt, "ACK")!= 1) {
+        printf("Game could not start!");
+        return EXIT_FAILURE;
+    }
+    while (didSomeoneWin == '0') {
+        Output();
+        Input(txt);
+        write(*connfd, txt, sizeof(txt));
+        if(CheckWin('X') != 1)
+        {
+            read(*connfd, txt, sizeof(txt));
+            CheckWin('0');
+        }
+    }
+    
+    return EXIT_SUCCESS;
+}
+
 int init_network(int *sockfd, int *connfd){
     
     if(host == 0)
@@ -158,14 +259,14 @@ int main(int argc, const char * argv[]) {
                 host = 1;
                 printf("You're hosting.");
             }
-        else
-        {
-            printf("You're joining a game.\n");
-        }
+        else printf("You're joining a game.\n");
     
     int socket, connfd;
     init_network(&socket, &connfd);
+    preConfig();
     system("clear");
+    if(host == 1) host_game(&connfd);
+    else client_game(&connfd);
     
     
     
