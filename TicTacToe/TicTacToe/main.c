@@ -22,7 +22,7 @@
 
 int host = 0;
 
-int init_network(int *sockfd){
+int init_network(int *sockfd, int *connfd){
     
     if(host == 0)
     {
@@ -77,7 +77,7 @@ int init_network(int *sockfd){
         
         // connect the client socket to server socket
         printf("Trying to connect to the host..\n");
-        if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
+        if (connect(*sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
             printf("connection with the server failed...\n");
             exit(0);
         }
@@ -87,13 +87,64 @@ int init_network(int *sockfd){
         printf("Network is set up correctly");
         
     }
-    
+    else
+    {
+        printf("Initializing Network with host configuration\n");
+        int len;
+        //Socket creation
+        printf("Trying to create Socket .. \n");
+        struct sockaddr_in servaddr, cli;
+        *sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (*sockfd == -1) {
+            printf("Socket creation failed.. \n");
+            exit(0);
+        }
+        else
+            printf("Socket successfully created..\n");
+        bzero(&servaddr, sizeof(servaddr));
+        
+        
+        bzero(&servaddr, sizeof(servaddr));
+        
+        // Assigning IP and Port
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        servaddr.sin_port = htons(PORT);
+        
+        //Binding Socket to Port
+        if ((bind(*sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+            perror("Trying to bind socket..\n");
+            return EXIT_FAILURE;
+        }
+        else
+            printf("Socket successfully binded..\n");
+        
+        // Now server is ready to listen and verification
+        if ((listen(sockfd, 5)) != 0) {
+            printf("Listen failed...\n");
+            exit(0);
+        }
+        else
+            printf("Server listening..\n");
+        len = sizeof(cli);
+        
+        // Accept the data packet from client and verification
+        connfd = accept(sockfd, (SA*)&cli, &len);
+        if (connfd < 0) {
+            printf("server accept failed...\n");
+            exit(0);
+        }
+        else
+            printf("server accept the client...\n");
+        
+    }
     
     for (int j; j<5; j++) {
         printf("Game starts in %i seconds", j);
         wait(1);
         system("clear");
     }
+
     return 1;
 }
 
@@ -112,8 +163,8 @@ int main(int argc, const char * argv[]) {
             printf("You're joining a game.\n");
         }
     
-    int socket;
-    init_network(&socket);
+    int socket, connfd;
+    init_network(&socket, &connfd);
     system("clear");
     
     
