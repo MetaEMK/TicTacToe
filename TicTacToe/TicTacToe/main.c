@@ -20,8 +20,8 @@
 #define PORT 8080
 #define LOCALHOST
 #define LOG_WIN "/W"
-#define LOG_ACK "/AC"
-#define LOG_START "/ST"
+#define LOG_ACK "AAC"
+#define LOG_START "AST"
 
 int host = 0;
 
@@ -97,19 +97,20 @@ void place_Input(char player, char *coord){
 }
 
 
-int client_game(int connfd){
+int client_game(int connfd, int sockfd){
     char txt[3];
-    bzero(txt, 3);
-    read(connfd, txt, sizeof(txt));
-    printf("TXT: %s", txt);
-    bzero(txt, 3);
-    if (strcmp(txt, LOG_START)!= 0) {
-        printf("Game could not start!");
-        return EXIT_FAILURE;
-    }
-    char t[] = LOG_ACK;
-    write(connfd, t, sizeof(t));
     
+    read(sockfd, txt, sizeof(txt));
+    write(connfd, LOG_ACK, sizeof(LOG_ACK));
+    printf("TXT: %s - LOG: %s", txt, LOG_START);
+//    bzero(txt, 3);
+    //char t[3] = LOG_START;
+//    if (strcmp(txt, txt)!= 0) {
+//        printf("Game could not start!");
+//        return EXIT_FAILURE;
+//    }
+    //char td[] = LOG_ACK;
+
     return 0;
 }
 
@@ -121,15 +122,15 @@ void write_message(char *mes){
     mes[i] = didSomeoneWin;
 }
 
-int host_game(int connfd){
+int host_game(int connfd, int sockfd){
     char player;
-    char txt[3];
+
     char coord[3];
-    char test[80] = "DIES IST EIN TEST!\n";
-    write(connfd, test, sizeof(test));
-    bzero(txt, 3);
-    read(connfd,txt,sizeof(LOG_ACK));
-    printf("TXT: %s",txt);
+    
+    write(connfd, LOG_START, sizeof(LOG_START));
+    char txt[3]="   ";
+    read(sockfd, txt, sizeof(LOG_ACK));
+    printf("TXT: %s\n", txt);
     if (strcmp(txt, LOG_ACK)!= 0) {
         printf("%s Game could not start!\n", txt);
         return EXIT_FAILURE;
@@ -144,7 +145,7 @@ int host_game(int connfd){
         if(CheckWin(player) != 1)
         {
             player = '0';
-            read(connfd, txt, sizeof(txt));
+            read(sockfd, txt, sizeof(txt));
             place_Input(player, txt);
             CheckWin(player);
         }
@@ -218,11 +219,7 @@ int init_network(int *sockfd, int *connfd){
             printf("connected to the server..\n");
         
         printf("Network is set up correctly\n");
-        char t[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        write(*connfd, t, sizeof(t));
-        char b[80];
-        read(*connfd, b, sizeof(t));
-        printf("NETWORK: T: %s", b);
+
         
     }
     else
@@ -276,14 +273,6 @@ int init_network(int *sockfd, int *connfd){
             printf("server accept the client...\n");
         
         printf("Network is set up correctly\n");
-        char t[] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        char b[80];
-        read(*connfd, b, sizeof(t));
-        printf("NETWORK: T: %s", b);
-        write(*connfd, t, sizeof(t));
-        read(*connfd, b, sizeof(t));
-        read(*connfd, b, sizeof(t));
-        read(*connfd, b, sizeof(t));
 
     }
 
@@ -307,8 +296,8 @@ int main(int argc, const char * argv[]) {
     init_network(&socket, &connfd);
     preConfig();
    // system("clear");
-    if(host == 1) host_game(connfd);
-    else client_game(connfd);
+    if(host == 1) host_game(connfd,socket);
+    else client_game(connfd,socket);
     
     
     close(socket);
