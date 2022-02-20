@@ -97,12 +97,18 @@ void place_Input(char player, char *coord){
 }
 
 
-int client_game(int connfd, int sockfd){
-    char txt[3];
-    
-    read(sockfd, txt, sizeof(txt));
-    write(connfd, LOG_ACK, sizeof(LOG_ACK));
-    printf("TXT: %s - LOG: %s", txt, LOG_START);
+int client_game(int *connfd, int *sockfd){
+    char txt[4];
+    bzero(txt, 4);
+    read(*sockfd, txt, sizeof(txt));
+    printf("TXT: %s - LOG: %s\n", txt, LOG_START);
+    char t[4]=LOG_ACK;
+    printf("T: %s!\n",t);
+    printf("T\n");
+    //sleep(1);
+    printf("T2\n");
+    write(*sockfd, t, sizeof(t));
+
 //    bzero(txt, 3);
     //char t[3] = LOG_START;
 //    if (strcmp(txt, txt)!= 0) {
@@ -122,17 +128,16 @@ void write_message(char *mes){
     mes[i] = didSomeoneWin;
 }
 
-int host_game(int connfd, int sockfd){
+int host_game(int *connfd, int *sockfd){
     char player;
 
     char coord[3];
-    
-    write(connfd, LOG_START, sizeof(LOG_START));
-    char txt[3]="   ";
-    read(sockfd, txt, sizeof(LOG_ACK));
+    char txt[4];
+    write(*connfd, LOG_START, sizeof(txt));
+    read(*connfd, txt, sizeof(txt));
     printf("TXT: %s\n", txt);
     if (strcmp(txt, LOG_ACK)!= 0) {
-        printf("%s Game could not start!\n", txt);
+        printf("Game could not start!\n");
         return EXIT_FAILURE;
     }
     while (didSomeoneWin == '0') {
@@ -140,18 +145,18 @@ int host_game(int connfd, int sockfd){
         player = 'X';
         Input(coord);
         place_Input(player, coord);
-        write(connfd, coord, sizeof(coord));
+        write(*connfd, coord, sizeof(coord));
         
         if(CheckWin(player) != 1)
         {
             player = '0';
-            read(sockfd, txt, sizeof(txt));
+            read(*sockfd, txt, sizeof(txt));
             place_Input(player, txt);
             CheckWin(player);
         }
     }
     write_message(txt);
-    write(connfd, txt, sizeof(txt));
+    write(*connfd, txt, sizeof(txt));
     printf("Player %c won!\n",didSomeoneWin);
     return EXIT_SUCCESS;
 }
@@ -220,12 +225,17 @@ int init_network(int *sockfd, int *connfd){
         
         printf("Network is set up correctly\n");
 
-        
+        char t[8];
+        read(*sockfd, t, sizeof(t));
+        printf("Client reads: %s\n",t);
+        t[4]='4';
+        write(*sockfd, &t, sizeof(t));
+        printf("Client sends: %s\n",t);
     }
     else
     {
         printf("Initializing Network with host configuration\n");
-        int len;
+        unsigned int len;
         //Socket creation
         printf("Trying to create Socket .. \n");
         struct sockaddr_in servaddr, cli;
@@ -273,8 +283,11 @@ int init_network(int *sockfd, int *connfd){
             printf("server accept the client...\n");
         
         printf("Network is set up correctly\n");
-
-    }
+        char t[8] = "Test";
+        write(*connfd, t, sizeof(t));
+        printf("Hostmessage: %s\n",t);
+        read(*connfd, t, sizeof(t));
+        printf("Hostmessage2 INC: %s\n",t);    }
 
     return 1;
 }
@@ -283,7 +296,7 @@ int main(int argc, const char * argv[]) {
     
     printf("Do you want to \"host\" or \"join\" a game? ");
     char inp_host[4];
-    if (scanf("%s", &inp_host))
+    if (scanf("%s", inp_host))
         printf("INPUT: %s", inp_host);
         if(strcmp(inp_host, "host") == 0)
         {
@@ -296,8 +309,8 @@ int main(int argc, const char * argv[]) {
     init_network(&socket, &connfd);
     preConfig();
    // system("clear");
-    if(host == 1) host_game(connfd,socket);
-    else client_game(connfd,socket);
+    if(host == 1) host_game(&connfd,&socket);
+    else client_game(&connfd,&socket);
     
     
     close(socket);
