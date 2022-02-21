@@ -83,7 +83,6 @@ void Input(char *coord){
         fflush(stdin);
         printf("Please enter coordinates row: 0/1/2\n");
         scanf("%c", &z);
-        printf("%c - %c - %d\n",z,(int) '1',(int) '1');
         if(z == '0' || z == '1' || z == '2') {
             br1 = 0;
             
@@ -100,10 +99,9 @@ void Input(char *coord){
         int col = (int) s-48;
         if (playground[row][col] != '-')
         {
-            printf("%c,%c Wrong input, please try again!\n",playground[row][col],'-');
+            printf("Wrong input, please try again!\n");
             br1=1;
         }
-        printf("%d, %d\n",br1,br2);
     }
     coord[1] =s;
     coord[0] =z;
@@ -252,7 +250,6 @@ int init_network(int *sockfd, int *connfd){
         
         printf("Network is set up correctly\n");
 
-        char t[8];
     }
     else
     {
