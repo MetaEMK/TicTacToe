@@ -124,14 +124,12 @@ int client_game(int *connfd, int *sockfd){
     }
     while (didSomeoneWin == '-') {
         read(*sockfd, txt, sizeof(txt));
-        printf("1:%s\n",txt);
         if (txt[2] == '-') {
             bzero(txt, sizeof(txt));
             read(*sockfd, txt, sizeof(txt)); //Gets Coords from P1
             place_Input('X', txt);
             Output();
             read(*sockfd, txt, sizeof(txt)); //Reads Con
-            printf("CON: %s, %s\n",txt,LOG_CON);
             if (strcmp(txt, LOG_CON) == 0) {
                 bzero(txt, sizeof(txt));
                 Input(txt);//Asks for Action from 0
@@ -255,11 +253,6 @@ int init_network(int *sockfd, int *connfd){
         printf("Network is set up correctly\n");
 
         char t[8];
-        read(*sockfd, t, sizeof(t));
-        printf("Client reads: %s\n",t);
-        t[4]='4';
-        write(*sockfd, &t, sizeof(t));
-        printf("Client sends: %s\n",t);
     }
     else
     {
@@ -312,11 +305,8 @@ int init_network(int *sockfd, int *connfd){
             printf("server accept the client...\n");
         
         printf("Network is set up correctly\n");
-        char t[8] = "Test";
-        write(*connfd, t, sizeof(t));
-        printf("Hostmessage: %s\n",t);
-        read(*connfd, t, sizeof(t));
-        printf("Hostmessage2 INC: %s\n",t);    }
+        
+    }
 
     return 1;
 }
@@ -337,7 +327,7 @@ int main(int argc, const char * argv[]) {
     int socket, connfd;
     init_network(&socket, &connfd);
     preConfig();
-   // system("clear");
+    system("clear");
     if(host == 1) host_game(&connfd,&socket);
     else client_game(&connfd,&socket);
     
