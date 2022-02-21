@@ -20,14 +20,15 @@
 #define PORT 8080
 #define LOCALHOST
 #define LOG_WIN "/W"
-#define LOG_ACK "AAC"
-#define LOG_START "AST"
+#define LOG_ACK "/AC"
+#define LOG_START "/ST"
+#define LOG_CON "/CO"
 
 int host = 0;
 
 char playground[3][3];
 char inp_coor[3];
-char didSomeoneWin = 0;
+char didSomeoneWin = '-';
 
 void preConfig(){
     for (int spalte = 0; spalte < 3; spalte++) {
@@ -38,126 +39,154 @@ void preConfig(){
 }
 
 void Output(){
-    //system("clear");
-    for (int zeile = 0; zeile < 3; zeile++) {
-        for (int spalte = 0; spalte < 3; spalte++) {
-            printf("%c  ", playground[spalte][zeile]);
+    system("clear");
+    for (int row = 0; row < 3; row++) {
+        for (int col = 0; col < 3; col++) {
+            printf("%c  ", playground[row][col]);
         }
         printf("\n");
         
     }
 }
 int CheckWin(char a){
+    int open=0;
+    for (int row = 0; row <3; row++) {
+        for (int col = 0; col<3; col++) {
+            if (playground[row][col] == '-') {
+                open = 1;
+            }
+        }
+    }
+    if (open == 0) didSomeoneWin = 'W';
+    
     if (playground[0][0] == a && playground[1][1] == a && playground[2][2] == a) { didSomeoneWin = a; }
-    if (playground[2][0] == a && playground[1][1] == a && playground[0][2] == a) { didSomeoneWin = 1; }
-    //Rest Prüfen
+    if (playground[2][0] == a && playground[1][1] == a && playground[0][2] == a) { didSomeoneWin = a; }
+    //Dia
     for (int i = 0; i < 3; i++) {
-        //Spalte
+        //Row
         if (playground[i][0] == a && playground[i][1] == a && playground[i][2] == a) { didSomeoneWin = a; }
-        //Zeile
+        //Col
         if (playground[0][i] == a && playground[1][i] == a && playground[2][i] == a) { didSomeoneWin = a; }
     }
-    if (a != 0) return 1;
+    if (didSomeoneWin != '-') return 1;
     else return 0;
 }
 void Input(char *coord){
-        int br1=1;
-        int br2=1;
-        while(br1 == 1 && br2 == 1){
+    int br1=1;
+    int br2=1;
+    char z = '0';
+    char s = '0';
+    while(br1 == 1 || br2 == 1){
+        br1=1;
+        br2=1;
+        
+        fflush(stdin);
+        printf("Please enter coordinates row: 0/1/2\n");
+        scanf("%c", &z);
+        printf("%c - %c - %d\n",z,(int) '1',(int) '1');
+        if(z == '0' || z == '1' || z == '2') {
+            br1 = 0;
+            
+        } else printf("Wrong row input, please try again!\n");
+        fflush(stdin);
+        printf("Please enter coordinates column: 0/1/2 and column 0/1/2\n");
+        scanf("%c", &s);
+        if(s == '0' || s == '1' || s == '2') {
+            br2 = 0;
+        } else printf("Wrong column input, please try again!\n");
+        fflush(stdin);
+        
+        int row = (int) z-48;
+        int col = (int) s-48;
+        if (playground[row][col] != '-')
+        {
+            printf("%c,%c Wrong input, please try again!\n",playground[row][col],'-');
             br1=1;
-            br2=1;
-            char z = '0';
-            char s = '0';
-            fflush(stdin);
-            printf("Please enter coordinates row: 0/1/2\n");
-            scanf("%c", &z);
-            if(z == '0' || z == '1' || z == '2') {
-                br1 = 0;
-                printf("Wrong input, please try again!");
-            }
-            fflush(stdin);
-            printf("Please enter coordinates column: 0/1/2 and column 0/1/2\n");
-            scanf("%c", &s);
-            if(s == '0' || s == '1' || s == '2') {
-                br2 = 0;
-                printf("Wrong input, please try again!");
-            }
-            fflush(stdin);
-            coord[0] =z;
-            coord[1] =s;
-            if (playground[s][z] != '-')
-            {
-                printf("Wrong input, please try again!");
-                br1=0;
         }
+        printf("%d, %d\n",br1,br2);
     }
+    coord[1] =s;
+    coord[0] =z;
 }
 void place_Input(char player, char *coord){
-    playground[coord[0]][coord[1]] = player;
+    playground[coord[0]-48][coord[1]-48] = player;
 }
 
 
 int client_game(int *connfd, int *sockfd){
     char txt[4];
-    bzero(txt, 4);
     read(*sockfd, txt, sizeof(txt));
-    printf("TXT: %s - LOG: %s\n", txt, LOG_START);
-    char t[4]=LOG_ACK;
-    printf("T: %s!\n",t);
-    printf("T\n");
-    //sleep(1);
-    printf("T2\n");
-    write(*sockfd, t, sizeof(t));
-
-//    bzero(txt, 3);
-    //char t[3] = LOG_START;
-//    if (strcmp(txt, txt)!= 0) {
-//        printf("Game could not start!");
-//        return EXIT_FAILURE;
-//    }
-    //char td[] = LOG_ACK;
-
+    write(*sockfd, LOG_ACK, sizeof(LOG_ACK));
+    bzero(txt, 3);
+    if (strcmp(txt, txt)!= 0) {
+        printf("Game could not start!");
+        return EXIT_FAILURE;
+    }
+    while (didSomeoneWin == '-') {
+        read(*sockfd, txt, sizeof(txt));
+        printf("1:%s\n",txt);
+        if (txt[2] == '-') {
+            bzero(txt, sizeof(txt));
+            read(*sockfd, txt, sizeof(txt)); //Gets Coords from P1
+            place_Input('X', txt);
+            Output();
+            read(*sockfd, txt, sizeof(txt)); //Reads Con
+            printf("CON: %s, %s\n",txt,LOG_CON);
+            if (strcmp(txt, LOG_CON) == 0) {
+                bzero(txt, sizeof(txt));
+                Input(txt);//Asks for Action from 0
+                place_Input('0', txt);
+                write(*sockfd, txt, sizeof(txt));
+                Output();
+                printf("Please wait for player 1\n");
+            }
+        } else didSomeoneWin = txt[2];
+    }
+    if (didSomeoneWin == 'W') printf("Draw - Nobody won!\n");
+    else printf("Player %c won\n",didSomeoneWin);
     return 0;
 }
 
 void write_message(char *mes){
     char t[] = LOG_WIN;
     int i=0;
-    for (i=0; i<sizeof(t); i++) mes[i] = t[i];
-    mes[i] = ' ';
-    mes[i] = didSomeoneWin;
+    for (i=0; i<2; i++) mes[i] = t[i];
+    mes[2] = didSomeoneWin;
 }
 
 int host_game(int *connfd, int *sockfd){
     char player;
-
-    char coord[3];
     char txt[4];
     write(*connfd, LOG_START, sizeof(txt));
     read(*connfd, txt, sizeof(txt));
-    printf("TXT: %s\n", txt);
     if (strcmp(txt, LOG_ACK)!= 0) {
         printf("Game could not start!\n");
         return EXIT_FAILURE;
     }
-    while (didSomeoneWin == '0') {
+    while (didSomeoneWin == '-') {
+        write_message(txt);
+        write(*connfd, txt, sizeof(txt));
         Output();
         player = 'X';
-        Input(coord);
-        place_Input(player, coord);
-        write(*connfd, coord, sizeof(coord));
-        
+        Input(txt);
+        place_Input(player, txt);
+        Output();
+        write(*connfd, txt, sizeof(txt)); //writes COORDS
         if(CheckWin(player) != 1)
         {
+            printf("Please wait for player2\n");
+            write(*connfd, LOG_CON, sizeof(LOG_CON));
             player = '0';
-            read(*sockfd, txt, sizeof(txt));
+            read(*connfd, txt, sizeof(txt));
             place_Input(player, txt);
+            Output();
             CheckWin(player);
         }
     }
     write_message(txt);
     write(*connfd, txt, sizeof(txt));
-    printf("Player %c won!\n",didSomeoneWin);
+    if (didSomeoneWin == 'W') printf("Draw - Nobody won!\n");
+    else printf("Player %c won\n",didSomeoneWin);
     return EXIT_SUCCESS;
 }
 
