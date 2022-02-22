@@ -116,7 +116,7 @@ int client_game(int *connfd, int *sockfd){
     read(*sockfd, txt, sizeof(txt));
     write(*sockfd, LOG_ACK, sizeof(LOG_ACK));
     bzero(txt, 3);
-    if (strcmp(txt, txt)!= 0) {
+    if (strcmp(txt, LOG_START)!= 0) {
         printf("Game could not start!");
         return EXIT_FAILURE;
     }
@@ -298,9 +298,7 @@ int init_network(int *sockfd, int *connfd){
             printf("server accept failed...\n");
             exit(0);
         }
-        else
-            printf("server accept the client...\n");
-        
+        else printf("server accept the client...\n");
         printf("Network is set up correctly\n");
         
     }
